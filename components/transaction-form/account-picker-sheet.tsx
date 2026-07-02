@@ -109,6 +109,7 @@ export function AccountPickerSheet({
         is_default: false,
         is_archived: false,
         sort_order: 0,
+        created_by: null,
         created_at: new Date().toISOString(),
         balance: 0,
         paymentModes: [],
