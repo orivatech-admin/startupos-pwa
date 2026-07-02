@@ -1,0 +1,306 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
+import { ChevronLeft, Save, Loader2, Trash2 } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
+import { TypeTabs } from "@/components/transaction-form/type-tabs";
+import { AmountInput } from "@/components/transaction-form/amount-input";
+import { DateTimePicker } from "@/components/transaction-form/date-time-picker";
+import { CategoryPickerSheet } from "@/components/transaction-form/category-picker-sheet";
+import {
+  AccountPickerSheet,
+  type AccountWithModes,
+} from "@/components/transaction-form/account-picker-sheet";
+import { PaymentModePickerSheet } from "@/components/transaction-form/payment-mode-picker-sheet";
+import { ProjectPickerSheet } from "@/components/transaction-form/project-picker-sheet";
+import { TagInput } from "@/components/transaction-form/tag-input";
+import { AttachmentUploader } from "@/components/transaction-form/attachment-uploader";
+import {
+  createTransaction,
+  updateTransaction,
+  deleteTransaction,
+} from "@/app/(app)/transactions/actions";
+import { TransactionFormSchema } from "@/lib/validations/transaction";
+import { canMutateRecord } from "@/lib/permissions";
+import type { Database, TransactionType, UserRole } from "@/lib/supabase/types";
+
+type Category = Database["public"]["Tables"]["categories"]["Row"];
+type Project = Database["public"]["Tables"]["projects"]["Row"];
+type Transaction = Database["public"]["Tables"]["transactions"]["Row"];
+
+function FieldRow({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-0.5 px-4 py-1">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      {children}
+    </div>
+  );
+}
+
+export function TransactionForm({
+  categories,
+  projects: initialProjects,
+  accounts: initialAccounts,
+  existingTags,
+  defaultAccountId,
+  transaction,
+  initialTags = [],
+  currentUserId,
+  currentUserRole,
+  onClose,
+  onSaved,
+}: {
+  categories: Category[];
+  projects: Project[];
+  accounts: AccountWithModes[];
+  existingTags: string[];
+  defaultAccountId?: string;
+  transaction?: Transaction;
+  initialTags?: string[];
+  currentUserId?: string;
+  currentUserRole?: UserRole;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [projects, setProjects] = useState(initialProjects);
+  const [accounts, setAccounts] = useState(initialAccounts);
+  const [transactionType, setTransactionType] = useState<TransactionType>(
+    transaction?.transaction_type ?? "expense"
+  );
+  const [amount, setAmount] = useState(transaction ? String(transaction.amount) : "");
+  const [dateTime, setDateTime] = useState(transaction?.date_time ?? new Date().toISOString());
+  const [categoryId, setCategoryId] = useState(
+    transaction?.category_id ?? categories.find((c) => c.name === "Others")?.id
+  );
+  const [projectId, setProjectId] = useState(transaction?.project_id ?? undefined);
+  const [accountId, setAccountId] = useState(transaction?.account_id ?? defaultAccountId);
+  const [destinationAccountId, setDestinationAccountId] = useState(
+    transaction?.destination_account_id ?? undefined
+  );
+  const [paymentModeId, setPaymentModeId] = useState(transaction?.payment_mode_id ?? undefined);
+  const [notes, setNotes] = useState(transaction?.notes ?? "");
+  const [tags, setTags] = useState<string[]>(initialTags);
+  const [receipts, setReceipts] = useState<File[]>([]);
+  const [isPending, startTransition] = useTransition();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  // Creating a new transaction is always allowed; editing an existing one is
+  // limited to its creator (or an admin), mirroring the transactions_update /
+  // transactions_delete RLS policies.
+  const canEditExisting =
+    !transaction || canMutateRecord(currentUserRole, currentUserId, transaction.created_by);
+  const canDelete = !!transaction && canEditExisting;
+
+  const paymentModesForAccount = accounts.find((a) => a.id === accountId)?.paymentModes ?? [];
+
+  function handleAccountChange(id: string) {
+    setAccountId(id);
+    setPaymentModeId(undefined);
+  }
+
+  function buildCandidate() {
+    return {
+      transaction_type: transactionType,
+      amount,
+      currency: transaction?.currency ?? "INR",
+      date_time: dateTime,
+      category_id: categoryId,
+      project_id: projectId,
+      account_id: accountId,
+      destination_account_id: destinationAccountId,
+      payment_mode_id: transactionType === "transfer" ? undefined : paymentModeId,
+      notes: notes || undefined,
+      tags,
+    };
+  }
+
+  // Cheap synchronous check re-run every render — no need for useMemo.
+  const isFormValid = TransactionFormSchema.safeParse(buildCandidate()).success;
+
+  function handleSubmit() {
+    const parsed = TransactionFormSchema.safeParse(buildCandidate());
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Please check the form");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.set("transaction_type", parsed.data.transaction_type);
+    formData.set("amount", String(parsed.data.amount));
+    formData.set("currency", parsed.data.currency);
+    formData.set("date_time", parsed.data.date_time);
+    if (parsed.data.category_id) formData.set("category_id", parsed.data.category_id);
+    if (parsed.data.project_id) formData.set("project_id", parsed.data.project_id);
+    formData.set("account_id", parsed.data.account_id);
+    if (parsed.data.destination_account_id) {
+      formData.set("destination_account_id", parsed.data.destination_account_id);
+    }
+    if (parsed.data.payment_mode_id) formData.set("payment_mode_id", parsed.data.payment_mode_id);
+    if (parsed.data.notes) formData.set("notes", parsed.data.notes);
+    formData.set("tags", JSON.stringify(parsed.data.tags));
+    receipts.forEach((file) => formData.append("receipts", file));
+
+    startTransition(async () => {
+      const result = transaction
+        ? await updateTransaction(transaction.id, formData)
+        : await createTransaction(formData);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success(transaction ? "Transaction updated" : "Transaction added");
+      onSaved();
+    });
+  }
+
+  async function handleDeleteConfirm() {
+    const result = await deleteTransaction(transaction!.id);
+    if (!result.error) {
+      toast.success("Transaction deleted");
+      onClose();
+    }
+    return result;
+  }
+
+  return (
+    <div className="flex h-full flex-col bg-background">
+      <div className="flex items-center gap-3 border-b border-white/10 bg-card/50 px-4 py-3 backdrop-blur-xl">
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Back"
+          className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
+        >
+          <ChevronLeft className="size-5" />
+        </button>
+        <h1 className="flex-1 text-base font-semibold">
+          {transaction ? "Edit transaction" : "Add transaction"}
+        </h1>
+        {canDelete ? (
+          <button
+            type="button"
+            onClick={() => setDeleteOpen(true)}
+            aria-label="Delete transaction"
+            className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/15 hover:text-destructive"
+          >
+            <Trash2 className="size-4" />
+          </button>
+        ) : null}
+      </div>
+
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-28 pt-4">
+        <div className="shrink-0">
+          <TypeTabs value={transactionType} onChange={setTransactionType} />
+        </div>
+
+        <Card className="shrink-0 gap-0 p-4">
+          <div className="flex justify-center pb-3">
+            <DateTimePicker value={dateTime} onChange={setDateTime} />
+          </div>
+          <div className="border-t border-border pt-1">
+            <AmountInput value={amount} onChange={setAmount} />
+          </div>
+          <div className="border-t border-border pt-3">
+            <Textarea
+              placeholder="Write a note"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={1}
+              className="min-h-0 resize-none border-none bg-transparent px-3 py-2 text-lg font-medium text-foreground shadow-none placeholder:font-normal placeholder:text-muted-foreground/60 focus-visible:border-transparent focus-visible:ring-0 md:text-lg"
+            />
+          </div>
+        </Card>
+
+        <Card className="shrink-0 gap-0 p-0">
+          {transactionType !== "transfer" ? (
+            <FieldRow label="Category">
+              <CategoryPickerSheet
+                categories={categories}
+                value={categoryId}
+                onChange={setCategoryId}
+              />
+            </FieldRow>
+          ) : null}
+
+          <FieldRow label={transactionType === "transfer" ? "From account" : "Account"}>
+            <AccountPickerSheet
+              label={transactionType === "transfer" ? "From account" : "Account"}
+              accounts={accounts}
+              value={accountId}
+              onChange={handleAccountChange}
+              onCreated={(account) => setAccounts((prev) => [...prev, account])}
+              excludeId={transactionType === "transfer" ? destinationAccountId : undefined}
+            />
+          </FieldRow>
+
+          {transactionType === "transfer" ? (
+            <FieldRow label="To account">
+              <AccountPickerSheet
+                label="To account"
+                accounts={accounts}
+                value={destinationAccountId}
+                onChange={setDestinationAccountId}
+                onCreated={(account) => setAccounts((prev) => [...prev, account])}
+                excludeId={accountId}
+              />
+            </FieldRow>
+          ) : (
+            <FieldRow label="Payment mode">
+              <PaymentModePickerSheet
+                paymentModes={paymentModesForAccount}
+                value={paymentModeId}
+                onChange={setPaymentModeId}
+                disabled={!accountId}
+              />
+            </FieldRow>
+          )}
+
+          <FieldRow label="Project">
+            <ProjectPickerSheet
+              projects={projects}
+              value={projectId}
+              onChange={setProjectId}
+              onCreated={(project) => setProjects((prev) => [...prev, project])}
+            />
+          </FieldRow>
+        </Card>
+
+        <Card className="shrink-0 gap-4 p-4">
+          <p className="text-sm font-medium text-muted-foreground">Other details</p>
+          <TagInput value={tags} onChange={setTags} suggestions={existingTags} />
+          <AttachmentUploader value={receipts} onChange={setReceipts} />
+        </Card>
+      </div>
+
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 mx-auto flex w-full max-w-md justify-end p-6">
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={isPending || !isFormValid || !canEditExisting}
+          aria-label="Save transaction"
+          className="pointer-events-auto flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-black/30 transition-transform active:scale-95 disabled:opacity-40"
+        >
+          {isPending ? <Loader2 className="size-6 animate-spin" /> : <Save className="size-6" />}
+        </button>
+      </div>
+
+      {canDelete ? (
+        <DeleteConfirmDialog
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+          title="Delete this transaction?"
+          description="This can't be undone."
+          onConfirm={handleDeleteConfirm}
+        />
+      ) : null}
+    </div>
+  );
+}
