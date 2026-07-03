@@ -49,10 +49,10 @@ export function MonthlyBarChart({ data }: { data: MonthlyPoint[] }) {
           Expense
         </span>
       </div>
-      <div className="flex items-end justify-between gap-1" style={{ height: CHART_HEIGHT }}>
+      <div className="flex justify-between gap-1" style={{ height: CHART_HEIGHT }}>
         {data.map((point) => (
           <div key={point.label} className="flex flex-1 flex-col items-center gap-2">
-            <div className="flex h-full items-end gap-1">
+            <div className="flex h-0 min-h-0 flex-1 items-end gap-1">
               <Bar value={point.income} max={max} className="bg-chart-income" />
               <Bar value={point.expense} max={max} className="bg-chart-expense" />
             </div>

@@ -1,13 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { MoreVertical, Pencil, Trash2 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Pencil, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { PaymentModeFormDialog } from "@/components/accounts/payment-mode-form-dialog";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { PaymentModeIcon } from "@/lib/categories";
@@ -49,30 +44,26 @@ export function PaymentModeRow({
         <p className="text-xs text-muted-foreground">{KIND_LABELS[mode.kind]}</p>
       </div>
       {canEditOrDelete ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              aria-label="Payment mode options"
-              className="shrink-0 text-muted-foreground"
-            >
-              <MoreVertical className="size-4" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setEditOpen(true); }}>
-              <Pencil className="size-4" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              variant="destructive"
-              onSelect={(e) => { e.preventDefault(); setDeleteOpen(true); }}
-            >
-              <Trash2 className="size-4" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex shrink-0 items-center gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Edit payment mode"
+            onClick={() => setEditOpen(true)}
+          >
+            <Pencil className="size-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Delete payment mode"
+            onClick={() => setDeleteOpen(true)}
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        </div>
       ) : null}
 
       <PaymentModeFormDialog

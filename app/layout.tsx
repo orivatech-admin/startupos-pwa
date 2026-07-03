@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Lato } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { RegisterServiceWorker } from "@/components/register-service-worker";
+import { PointerEventsGuard } from "@/components/pointer-events-guard";
 import { BackgroundGlow } from "@/components/background-glow";
 import "./globals.css";
 
@@ -50,6 +51,7 @@ export default function RootLayout({
         {children}
         <Toaster richColors position="top-center" />
         <RegisterServiceWorker />
+        <PointerEventsGuard />
       </body>
     </html>
   );

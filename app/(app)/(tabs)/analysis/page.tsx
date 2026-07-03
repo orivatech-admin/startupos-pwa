@@ -2,22 +2,12 @@ import { BarChart3 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getAnalysisData } from "@/lib/queries";
 import { Card } from "@/components/ui/card";
-import { StatTile } from "@/components/analysis/stat-tile";
+import { AnalysisSummary } from "@/components/analysis/analysis-summary";
 import { MonthlyBarChart } from "@/components/analysis/monthly-bar-chart";
-import { CategoryBarList } from "@/components/analysis/category-bar-list";
-import { formatCurrency } from "@/lib/utils";
 
 export default async function AnalysisPage() {
   const supabase = await createClient();
-  const {
-    monthly,
-    categoryBreakdown,
-    totalBalance,
-    thisMonthSpend,
-    thisMonthCount,
-    avgDailySpend,
-    hasActivity,
-  } = await getAnalysisData(supabase);
+  const { monthly, byPeriod, totalBalance, hasActivity } = await getAnalysisData(supabase);
 
   return (
     <div className="flex flex-col gap-6 p-4">
@@ -38,29 +28,11 @@ export default async function AnalysisPage() {
         </Card>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-3">
-            <StatTile label="Total balance" value={formatCurrency(totalBalance)} />
-            <StatTile label="Transactions this month" value={String(thisMonthCount)} />
-            <StatTile
-              label="Spent this month"
-              value={formatCurrency(thisMonthSpend)}
-              tone="expense"
-            />
-            <StatTile label="Avg daily spend" value={formatCurrency(avgDailySpend)} />
-          </div>
+          <AnalysisSummary byPeriod={byPeriod} totalBalance={totalBalance} />
 
           <Card className="gap-4 p-4">
             <p className="text-sm font-medium">Income vs expense · last 6 months</p>
             <MonthlyBarChart data={monthly} />
-          </Card>
-
-          <Card className="gap-4 p-4">
-            <p className="text-sm font-medium">Top categories · last 3 months</p>
-            {categoryBreakdown.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No expenses recorded yet.</p>
-            ) : (
-              <CategoryBarList items={categoryBreakdown} />
-            )}
           </Card>
         </>
       )}
