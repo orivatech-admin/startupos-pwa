@@ -73,7 +73,7 @@ async function uploadReceipts(
       .from("receipts")
       .upload(path, file);
     if (uploadError) continue;
-    await supabase.from("receipts").insert({
+    const { error: insertError } = await supabase.from("receipts").insert({
       transaction_id: transactionId,
       storage_path: path,
       file_name: file.name,
@@ -81,13 +81,22 @@ async function uploadReceipts(
       size_bytes: file.size,
       uploaded_by: userId,
     });
+    if (insertError) {
+      // Row insert failed after the file already landed in storage — remove
+      // it so we don't leave an orphaned object with no DB reference.
+      console.error("Failed to record receipt after upload:", insertError);
+      await supabase.storage.from("receipts").remove([path]);
+    }
   }
 }
 
-function revalidateLedgerPaths() {
+function revalidateLedgerPaths(transactionId?: string) {
   revalidatePath("/home");
   revalidatePath("/transactions");
   revalidatePath("/accounts");
+  if (transactionId) {
+    revalidatePath(`/transactions/${transactionId}/edit`);
+  }
 }
 
 export async function createTransaction(formData: FormData): Promise<ActionResult> {
@@ -123,7 +132,7 @@ export async function createTransaction(formData: FormData): Promise<ActionResul
   const receiptFiles = formData.getAll("receipts").filter((f): f is File => f instanceof File);
   await uploadReceipts(supabase, transaction.id, userId, receiptFiles);
 
-  revalidateLedgerPaths();
+  revalidateLedgerPaths(transaction.id);
   return { id: transaction.id };
 }
 
@@ -167,7 +176,7 @@ export async function updateTransaction(
   const receiptFiles = formData.getAll("receipts").filter((f): f is File => f instanceof File);
   await uploadReceipts(supabase, id, access.userId, receiptFiles);
 
-  revalidateLedgerPaths();
+  revalidateLedgerPaths(id);
   return { id };
 }
 
@@ -209,6 +218,32 @@ export async function markReconciled(id: string, reconciled: boolean): Promise<A
     .eq("id", id);
   if (error) return { error: error.message };
   revalidateLedgerPaths();
+  return {};
+}
+
+export async function deleteReceipt(receiptId: string): Promise<ActionResult> {
+  const supabase = await createClient();
+  const access = await getAccessContext(supabase);
+  if (!access) return { error: "Not signed in" };
+
+  const { data: receipt, error: fetchError } = await supabase
+    .from("receipts")
+    .select("storage_path, transaction_id, transactions(created_by)")
+    .eq("id", receiptId)
+    .maybeSingle();
+  if (fetchError) return { error: fetchError.message };
+  if (!receipt) return { error: "Attachment not found" };
+
+  const createdBy = (receipt as unknown as { transactions: { created_by: string } | null })
+    .transactions?.created_by ?? null;
+  if (!canMutate(access, createdBy)) return { error: PERMISSION_ERROR };
+
+  const { error: deleteError } = await supabase.from("receipts").delete().eq("id", receiptId);
+  if (deleteError) return { error: deleteError.message };
+
+  await supabase.storage.from("receipts").remove([receipt.storage_path]);
+
+  revalidatePath(`/transactions/${receipt.transaction_id}/edit`);
   return {};
 }
 

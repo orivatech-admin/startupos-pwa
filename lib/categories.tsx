@@ -1,25 +1,25 @@
 import {
   Ellipsis,
-  Utensils,
-  ShoppingBag,
-  Plane,
-  Film,
-  HeartPulse,
-  Sparkles,
-  GraduationCap,
-  Receipt,
-  TrendingUp,
-  Home,
-  Landmark,
   Building2,
-  Gift,
-  ShoppingCart,
-  Car,
+  AppWindow,
+  Cloud,
+  Globe,
+  Scale,
+  Calculator,
+  Landmark,
+  Users,
+  Handshake,
+  Cpu,
+  Wifi,
+  Plane,
+  Megaphone,
+  Briefcase,
+  GraduationCap,
+  ShieldCheck,
   CreditCard,
   Wallet,
   Smartphone,
   FileText,
-  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { AccountType, PaymentModeKind } from "@/lib/supabase/types";
@@ -29,36 +29,38 @@ import type { AccountType, PaymentModeKind } from "@/lib/supabase/types";
 // the element type is stable across renders.
 export function CategoryIcon({ icon, className }: { icon: string; className?: string }) {
   switch (icon) {
-    case "utensils":
-      return <Utensils className={className} />;
-    case "shopping-bag":
-      return <ShoppingBag className={className} />;
-    case "plane":
-      return <Plane className={className} />;
-    case "film":
-      return <Film className={className} />;
-    case "heart-pulse":
-      return <HeartPulse className={className} />;
-    case "sparkles":
-      return <Sparkles className={className} />;
-    case "graduation-cap":
-      return <GraduationCap className={className} />;
-    case "receipt":
-      return <Receipt className={className} />;
-    case "trending-up":
-      return <TrendingUp className={className} />;
-    case "home":
-      return <Home className={className} />;
-    case "landmark":
-      return <Landmark className={className} />;
     case "building-2":
-      return <Building2 className={className} />;
-    case "gift":
-      return <Gift className={className} />;
-    case "shopping-cart":
-      return <ShoppingCart className={className} />;
-    case "car":
-      return <Car className={className} />;
+      return <Building2 className={cn("text-slate-400", className)} />;
+    case "app-window":
+      return <AppWindow className={cn("text-violet-400", className)} />;
+    case "cloud":
+      return <Cloud className={cn("text-sky-400", className)} />;
+    case "globe":
+      return <Globe className={cn("text-cyan-400", className)} />;
+    case "scale":
+      return <Scale className={cn("text-amber-400", className)} />;
+    case "calculator":
+      return <Calculator className={cn("text-emerald-400", className)} />;
+    case "landmark":
+      return <Landmark className={cn("text-blue-400", className)} />;
+    case "users":
+      return <Users className={cn("text-indigo-400", className)} />;
+    case "handshake":
+      return <Handshake className={cn("text-orange-400", className)} />;
+    case "cpu":
+      return <Cpu className={cn("text-zinc-400", className)} />;
+    case "wifi":
+      return <Wifi className={cn("text-teal-400", className)} />;
+    case "plane":
+      return <Plane className={cn("text-rose-400", className)} />;
+    case "megaphone":
+      return <Megaphone className={cn("text-pink-400", className)} />;
+    case "briefcase":
+      return <Briefcase className={cn("text-purple-400", className)} />;
+    case "graduation-cap":
+      return <GraduationCap className={cn("text-lime-400", className)} />;
+    case "shield-check":
+      return <ShieldCheck className={cn("text-red-400", className)} />;
     default:
       return <Ellipsis className={className} />;
   }

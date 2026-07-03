@@ -22,10 +22,12 @@ import {
   createTransaction,
   updateTransaction,
   deleteTransaction,
+  deleteReceipt,
 } from "@/app/(app)/transactions/actions";
 import { TransactionFormSchema } from "@/lib/validations/transaction";
 import { canMutateRecord } from "@/lib/permissions";
 import type { Database, TransactionType, UserRole } from "@/lib/supabase/types";
+import type { ReceiptWithUrl } from "@/lib/queries";
 
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 type Project = Database["public"]["Tables"]["projects"]["Row"];
@@ -54,6 +56,7 @@ export function TransactionForm({
   defaultAccountId,
   transaction,
   initialTags = [],
+  initialReceipts = [],
   currentUserId,
   currentUserRole,
   onClose,
@@ -66,6 +69,7 @@ export function TransactionForm({
   defaultAccountId?: string;
   transaction?: Transaction;
   initialTags?: string[];
+  initialReceipts?: ReceiptWithUrl[];
   currentUserId?: string;
   currentUserRole?: UserRole;
   onClose: () => void;
@@ -90,6 +94,7 @@ export function TransactionForm({
   const [notes, setNotes] = useState(transaction?.notes ?? "");
   const [tags, setTags] = useState<string[]>(initialTags);
   const [receipts, setReceipts] = useState<File[]>([]);
+  const [existingReceipts, setExistingReceipts] = useState(initialReceipts);
   const [isPending, startTransition] = useTransition();
   const [deleteOpen, setDeleteOpen] = useState(false);
   // Creating a new transaction is always allowed; editing an existing one is
@@ -159,6 +164,16 @@ export function TransactionForm({
       toast.success(transaction ? "Transaction updated" : "Transaction added");
       onSaved();
     });
+  }
+
+  async function handleRemoveExistingReceipt(receiptId: string) {
+    const previous = existingReceipts;
+    setExistingReceipts((prev) => prev.filter((r) => r.id !== receiptId));
+    const result = await deleteReceipt(receiptId);
+    if (result.error) {
+      toast.error(result.error);
+      setExistingReceipts(previous);
+    }
   }
 
   async function handleDeleteConfirm() {
@@ -276,7 +291,12 @@ export function TransactionForm({
         <Card className="shrink-0 gap-4 p-4">
           <p className="text-sm font-medium text-muted-foreground">Other details</p>
           <TagInput value={tags} onChange={setTags} suggestions={existingTags} />
-          <AttachmentUploader value={receipts} onChange={setReceipts} />
+          <AttachmentUploader
+            value={receipts}
+            onChange={setReceipts}
+            existingReceipts={existingReceipts}
+            onRemoveExisting={canEditExisting ? handleRemoveExistingReceipt : undefined}
+          />
         </Card>
       </div>
 

@@ -6,6 +6,7 @@ import {
   subMonths,
   format,
   differenceInCalendarDays,
+  differenceInCalendarMonths,
 } from "date-fns";
 import type { createClient } from "@/lib/supabase/server";
 
@@ -113,6 +114,54 @@ export async function getTransactionWithTags(supabase: SupabaseClient, id: strin
   return { transaction, tags };
 }
 
+export interface ReceiptWithUrl {
+  id: string;
+  file_name: string | null;
+  content_type: string | null;
+  signedUrl: string | null;
+}
+
+// The receipts bucket is private (see 0002_rls_policies.sql), so every read
+// needs a short-lived signed URL rather than a public one.
+const RECEIPT_SIGNED_URL_TTL_SECONDS = 60 * 60;
+
+export async function getReceiptsForTransaction(
+  supabase: SupabaseClient,
+  transactionId: string
+): Promise<ReceiptWithUrl[]> {
+  const { data: receipts, error } = await supabase
+    .from("receipts")
+    .select("id, file_name, content_type, storage_path")
+    .eq("transaction_id", transactionId)
+    .order("uploaded_at");
+  console.log(
+    `[getReceiptsForTransaction] transactionId=${transactionId} error=${error?.message ?? null} rows=`,
+    receipts
+  );
+  if (error) throw error;
+  if (!receipts || receipts.length === 0) return [];
+
+  const { data: signed, error: signError } = await supabase.storage
+    .from("receipts")
+    .createSignedUrls(
+      receipts.map((r) => r.storage_path),
+      RECEIPT_SIGNED_URL_TTL_SECONDS
+    );
+  console.log(
+    "[getReceiptsForTransaction] createSignedUrls error=",
+    signError,
+    "signed=",
+    signed
+  );
+
+  return receipts.map((r, i) => ({
+    id: r.id,
+    file_name: r.file_name,
+    content_type: r.content_type,
+    signedUrl: signed?.[i]?.signedUrl ?? null,
+  }));
+}
+
 export interface TransactionListItem {
   id: string;
   transaction_type: "expense" | "income" | "transfer";
@@ -123,6 +172,7 @@ export interface TransactionListItem {
   notes: string | null;
   categoryName: string | null;
   categoryIcon: string | null;
+  projectName: string | null;
   accountName: string;
   destinationAccountName: string | null;
 }
@@ -138,18 +188,23 @@ async function attachLookups(
     status: "recorded" | "reconciled";
     notes: string | null;
     category_id: string | null;
+    project_id: string | null;
     account_id: string;
     destination_account_id: string | null;
   }[]
 ): Promise<TransactionListItem[]> {
-  const [categories, { data: accounts, error }] = await Promise.all([
-    getCategories(supabase),
-    supabase.from("accounts").select("id, name"),
-  ]);
+  const [categories, { data: accounts, error }, { data: projects, error: projectsError }] =
+    await Promise.all([
+      getCategories(supabase),
+      supabase.from("accounts").select("id, name"),
+      supabase.from("projects").select("id, name"),
+    ]);
   if (error) throw error;
+  if (projectsError) throw projectsError;
 
   const categoryById = new Map(categories.map((c) => [c.id, c]));
   const accountById = new Map(accounts.map((a) => [a.id, a]));
+  const projectById = new Map((projects ?? []).map((p) => [p.id, p]));
 
   return transactions.map((t) => ({
     id: t.id,
@@ -161,6 +216,7 @@ async function attachLookups(
     notes: t.notes,
     categoryName: t.category_id ? categoryById.get(t.category_id)?.name ?? null : null,
     categoryIcon: t.category_id ? categoryById.get(t.category_id)?.icon ?? null : null,
+    projectName: t.project_id ? projectById.get(t.project_id)?.name ?? null : null,
     accountName: accountById.get(t.account_id)?.name ?? "—",
     destinationAccountName: t.destination_account_id
       ? accountById.get(t.destination_account_id)?.name ?? null
@@ -172,7 +228,7 @@ export async function getRecentTransactions(supabase: SupabaseClient, limit: num
   const { data, error } = await supabase
     .from("transactions")
     .select(
-      "id, transaction_type, amount, currency, date_time, status, notes, category_id, account_id, destination_account_id"
+      "id, transaction_type, amount, currency, date_time, status, notes, category_id, project_id, account_id, destination_account_id"
     )
     .order("date_time", { ascending: false })
     .limit(limit);
@@ -187,7 +243,7 @@ export async function getTransactionsForRecords(
   let query = supabase
     .from("transactions")
     .select(
-      "id, transaction_type, amount, currency, date_time, status, notes, category_id, account_id, destination_account_id"
+      "id, transaction_type, amount, currency, date_time, status, notes, category_id, project_id, account_id, destination_account_id"
     )
     .order("date_time", { ascending: false });
   if (type) query = query.eq("transaction_type", type);
@@ -279,24 +335,32 @@ export async function getCashFlowSummary(
   };
 }
 
+export interface AnalysisPeriodStats {
+  spend: number;
+  income: number;
+  count: number;
+  avgDailySpend: number;
+  avgMonthlySpend: number;
+  categoryBreakdown: { name: string; amount: number }[];
+}
+
 export async function getAnalysisData(supabase: SupabaseClient) {
   const now = new Date();
-  const sixMonthsAgoStart = startOfMonth(subMonths(now, 5));
-  const threeMonthsAgoStart = startOfMonth(subMonths(now, 2));
   const thisMonthStart = startOfMonth(now);
+  const thisYearStart = startOfYear(now);
 
-  const [{ data: transactions, error }, categories, accounts] = await Promise.all([
-    supabase
-      .from("transactions")
-      .select("transaction_type, amount, category_id, date_time")
-      .gte("date_time", sixMonthsAgoStart.toISOString()),
+  const [{ data: transactionRows, error }, categories, accounts] = await Promise.all([
+    supabase.from("transactions").select("transaction_type, amount, category_id, date_time"),
     getCategories(supabase),
     getAccountsWithPaymentModes(supabase),
   ]);
   if (error) throw error;
+  const transactions = transactionRows ?? [];
 
   const categoryById = new Map(categories.map((c) => [c.id, c]));
 
+  // Trend chart always shows the last 6 months regardless of the selected
+  // period filter below — it's a fixed-window view, not a filtered total.
   const months = Array.from({ length: 6 }, (_, i) => startOfMonth(subMonths(now, 5 - i)));
   const monthly = months.map((monthStart) => {
     const monthEnd = endOfMonth(monthStart);
@@ -312,40 +376,66 @@ export async function getAnalysisData(supabase: SupabaseClient) {
     return { label: format(monthStart, "MMM"), income, expense };
   });
 
-  const spendByCategory = new Map<string, number>();
-  let thisMonthSpend = 0;
-  let thisMonthIncome = 0;
-  let thisMonthCount = 0;
-
-  for (const t of transactions) {
-    const d = new Date(t.date_time);
-    if (d >= threeMonthsAgoStart && t.transaction_type === "expense") {
-      const name = t.category_id ? categoryById.get(t.category_id)?.name ?? "Others" : "Others";
-      spendByCategory.set(name, (spendByCategory.get(name) ?? 0) + t.amount);
+  function statsSince(
+    fromDate: Date | null,
+    daysInPeriod: number,
+    monthsInPeriod: number
+  ): AnalysisPeriodStats {
+    let income = 0;
+    let spend = 0;
+    let count = 0;
+    const spendByCategory = new Map<string, number>();
+    for (const t of transactions) {
+      const d = new Date(t.date_time);
+      if (fromDate && d < fromDate) continue;
+      count += 1;
+      if (t.transaction_type === "income") {
+        income += t.amount;
+      } else if (t.transaction_type === "expense") {
+        spend += t.amount;
+        const name = t.category_id ? categoryById.get(t.category_id)?.name ?? "Others" : "Others";
+        spendByCategory.set(name, (spendByCategory.get(name) ?? 0) + t.amount);
+      }
     }
-    if (d >= thisMonthStart) {
-      thisMonthCount += 1;
-      if (t.transaction_type === "expense") thisMonthSpend += t.amount;
-      else if (t.transaction_type === "income") thisMonthIncome += t.amount;
-    }
+    const categoryBreakdown = Array.from(spendByCategory.entries())
+      .map(([name, amount]) => ({ name, amount }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 8);
+    return {
+      income,
+      spend,
+      count,
+      avgDailySpend: spend / daysInPeriod,
+      avgMonthlySpend: spend / monthsInPeriod,
+      categoryBreakdown,
+    };
   }
 
-  const categoryBreakdown = Array.from(spendByCategory.entries())
-    .map(([name, amount]) => ({ name, amount }))
-    .sort((a, b) => b.amount - a.amount)
-    .slice(0, 8);
+  const earliestTransaction = transactions.reduce<Date | null>((earliest, t) => {
+    const d = new Date(t.date_time);
+    return !earliest || d < earliest ? d : earliest;
+  }, null);
 
-  const daysElapsed = differenceInCalendarDays(now, thisMonthStart) + 1;
+  const byPeriod: Record<CashFlowPeriod, AnalysisPeriodStats> = {
+    thisMonth: statsSince(thisMonthStart, differenceInCalendarDays(now, thisMonthStart) + 1, 1),
+    thisYear: statsSince(
+      thisYearStart,
+      differenceInCalendarDays(now, thisYearStart) + 1,
+      differenceInCalendarMonths(now, thisYearStart) + 1
+    ),
+    allTime: statsSince(
+      null,
+      earliestTransaction ? differenceInCalendarDays(now, earliestTransaction) + 1 : 1,
+      earliestTransaction ? differenceInCalendarMonths(now, earliestTransaction) + 1 : 1
+    ),
+  };
+
   const totalBalance = accounts.reduce((sum, a) => sum + a.balance, 0);
 
   return {
     monthly,
-    categoryBreakdown,
+    byPeriod,
     totalBalance,
-    thisMonthSpend,
-    thisMonthIncome,
-    thisMonthCount,
-    avgDailySpend: thisMonthSpend / daysElapsed,
     hasActivity: transactions.length > 0,
   };
 }

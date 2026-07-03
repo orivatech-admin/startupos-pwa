@@ -1,6 +1,11 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getTransactionFormData, getTransactionWithTags, getCurrentProfile } from "@/lib/queries";
+import {
+  getTransactionFormData,
+  getTransactionWithTags,
+  getCurrentProfile,
+  getReceiptsForTransaction,
+} from "@/lib/queries";
 import { TransactionFormRoute } from "@/components/transaction-form/transaction-form-route";
 
 export default async function EditTransactionPage({
@@ -10,13 +15,16 @@ export default async function EditTransactionPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const [formData, existing, profile] = await Promise.all([
+  const [formData, existing, profile, receipts] = await Promise.all([
     getTransactionFormData(supabase),
     getTransactionWithTags(supabase, id),
     getCurrentProfile(supabase),
+    getReceiptsForTransaction(supabase, id),
   ]);
 
   if (!existing) notFound();
+
+  console.log(`[EditTransactionPage] id=${id} receipts.length=${receipts.length}`, receipts);
 
   return (
     <div className="flex h-svh flex-col">
@@ -29,6 +37,7 @@ export default async function EditTransactionPage({
         defaultAccountId={formData.defaultAccountId}
         transaction={existing.transaction}
         initialTags={existing.tags}
+        initialReceipts={receipts}
         currentUserId={profile?.id}
         currentUserRole={profile?.role}
       />

@@ -27,7 +27,9 @@ export function TransactionRow({ transaction }: { transaction: TransactionListIt
   const subtitle =
     transaction.transaction_type === "transfer"
       ? `${transaction.accountName} → ${transaction.destinationAccountName ?? "—"}`
-      : `${transaction.categoryName ?? "Others"} · ${transaction.accountName}`;
+      : transaction.projectName
+        ? `${transaction.projectName} · ${transaction.accountName}`
+        : transaction.accountName;
 
   return (
     <Link
