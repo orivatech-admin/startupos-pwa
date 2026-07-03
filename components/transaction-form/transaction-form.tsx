@@ -106,6 +106,14 @@ export function TransactionForm({
 
   const paymentModesForAccount = accounts.find((a) => a.id === accountId)?.paymentModes ?? [];
 
+  function handlePaymentModeCreated(mode: Database["public"]["Tables"]["payment_modes"]["Row"]) {
+    setAccounts((prev) =>
+      prev.map((a) =>
+        a.id === mode.account_id ? { ...a, paymentModes: [...a.paymentModes, mode] } : a
+      )
+    );
+  }
+
   function handleAccountChange(id: string) {
     setAccountId(id);
     setPaymentModeId(undefined);
@@ -270,9 +278,11 @@ export function TransactionForm({
           ) : (
             <FieldRow label="Payment mode">
               <PaymentModePickerSheet
+                accountId={accountId}
                 paymentModes={paymentModesForAccount}
                 value={paymentModeId}
                 onChange={setPaymentModeId}
+                onCreated={handlePaymentModeCreated}
                 disabled={!accountId}
               />
             </FieldRow>
