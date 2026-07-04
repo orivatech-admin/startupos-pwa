@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -49,7 +50,8 @@ export function DeleteConfirmDialog({
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
           <AlertDialogAction onClick={handleConfirm} disabled={isPending}>
-            {isPending ? "Deleting…" : "Delete"}
+            {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+            Delete
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

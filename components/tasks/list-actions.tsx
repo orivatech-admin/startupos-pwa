@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { MoreVertical, Pencil, Trash2, X } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, X, Loader2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -153,6 +153,7 @@ export function ListActions({
               onClick={handleRename}
               disabled={isRenaming || !name.trim()}
             >
+              {isRenaming ? <Loader2 className="size-4 animate-spin" /> : null}
               Save
             </Button>
           </DrawerFooter>
@@ -178,6 +179,7 @@ export function ListActions({
                 handleDelete();
               }}
             >
+              {isDeleting ? <Loader2 className="size-4 animate-spin" /> : null}
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

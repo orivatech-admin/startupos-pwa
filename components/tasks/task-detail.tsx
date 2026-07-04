@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ChevronLeft, Check, UserPen, Trash2 } from "lucide-react";
+import { ChevronLeft, Check, UserPen, Trash2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { canMutateRecord } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
@@ -96,7 +96,11 @@ export function TaskDetail({
               : "border border-border bg-secondary text-secondary-foreground"
           )}
         >
-          <Check className="size-3.5" strokeWidth={isCompleted ? 3 : 2} />
+          {isToggling ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <Check className="size-3.5" strokeWidth={isCompleted ? 3 : 2} />
+          )}
           {isCompleted ? "Done" : "Mark as done"}
         </button>
       </div>
@@ -130,6 +134,7 @@ export function TaskDetail({
               disabled={isSaving || !title.trim()}
               className="w-full"
             >
+              {isSaving ? <Loader2 className="size-4 animate-spin" /> : null}
               Save
             </Button>
             <Button
