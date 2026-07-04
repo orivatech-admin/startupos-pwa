@@ -69,12 +69,10 @@ export function TaskDetail({
 
   async function handleDelete() {
     const result = await deleteTask(task.id);
-    if (result?.error) {
-      toast.error(result.error);
-      return;
-    }
+    if (result?.error) return { error: result.error };
     router.push("/tasks");
     router.refresh();
+    return {};
   }
 
   return (
