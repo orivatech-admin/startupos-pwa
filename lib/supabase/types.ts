@@ -260,6 +260,67 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["allowed_emails"]["Row"]>;
         Relationships: [];
       };
+      task_lists: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["task_lists"]["Row"]> & {
+          name: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["task_lists"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "task_lists_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      tasks: {
+        Row: {
+          id: string;
+          list_id: string | null;
+          user_id: string;
+          assignee_id: string | null;
+          title: string;
+          description: string | null;
+          due_at: string | null;
+          is_completed: boolean;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["tasks"]["Row"]> & {
+          title: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["tasks"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "tasks_list_id_fkey";
+            columns: ["list_id"];
+            isOneToOne: false;
+            referencedRelation: "task_lists";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tasks_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tasks_assignee_id_fkey";
+            columns: ["assignee_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       account_balances: {

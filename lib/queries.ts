@@ -454,6 +454,130 @@ export async function getCurrentProfile(supabase: SupabaseClient) {
   return data;
 }
 
+export interface TaskMember {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+}
+
+export async function getTaskMembers(supabase: SupabaseClient): Promise<TaskMember[]> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, full_name, email, avatar_url")
+    .order("full_name");
+  if (error) throw error;
+  return data.map((p) => ({
+    id: p.id,
+    name: p.full_name || p.email,
+    avatarUrl: p.avatar_url,
+  }));
+}
+
+// Sentinel id for the virtual "My Tasks" list, which groups tasks that do not
+// belong to any real list (list_id null). It is not a row in task_lists.
+export const MY_TASKS_LIST_ID = "my-tasks";
+
+export interface TaskListWithTasks {
+  id: string;
+  name: string;
+  isVirtual: boolean;
+  user_id: string | null;
+  tasks: {
+    id: string;
+    title: string;
+    description: string | null;
+    due_at: string | null;
+    is_completed: boolean;
+    user_id: string;
+    assignee_id: string | null;
+    assigneeName: string | null;
+    assigneeAvatarUrl: string | null;
+  }[];
+}
+
+export async function getTaskListsWithTasks(
+  supabase: SupabaseClient
+): Promise<TaskListWithTasks[]> {
+  const [
+    { data: lists, error: listsError },
+    { data: tasks, error: tasksError },
+    members,
+  ] = await Promise.all([
+    supabase
+      .from("task_lists")
+      .select("id, name, user_id")
+      .order("created_at"),
+    supabase
+      .from("tasks")
+      .select("id, list_id, title, description, due_at, is_completed, user_id, assignee_id")
+      .order("created_at"),
+    getTaskMembers(supabase),
+  ]);
+  if (listsError) throw listsError;
+  if (tasksError) throw tasksError;
+
+  const nameById = new Map(members.map((m) => [m.id, m.name]));
+  const avatarById = new Map(members.map((m) => [m.id, m.avatarUrl]));
+  const withAssignee = (t: (typeof tasks)[number]) => ({
+    ...t,
+    assigneeName: t.assignee_id ? nameById.get(t.assignee_id) ?? null : null,
+    assigneeAvatarUrl: t.assignee_id ? avatarById.get(t.assignee_id) ?? null : null,
+  });
+
+  const myTasks: TaskListWithTasks = {
+    id: MY_TASKS_LIST_ID,
+    name: "My Tasks",
+    isVirtual: true,
+    user_id: null,
+    tasks: tasks.filter((t) => t.list_id === null).map(withAssignee),
+  };
+
+  const realLists: TaskListWithTasks[] = lists.map((list) => ({
+    ...list,
+    isVirtual: false,
+    tasks: tasks.filter((t) => t.list_id === list.id).map(withAssignee),
+  }));
+
+  return [myTasks, ...realLists];
+}
+
+export interface TaskDetailData {
+  id: string;
+  list_id: string | null;
+  title: string;
+  description: string | null;
+  due_at: string | null;
+  is_completed: boolean;
+  user_id: string;
+  assignee_id: string | null;
+}
+
+export async function getTaskById(
+  supabase: SupabaseClient,
+  id: string
+): Promise<TaskDetailData | null> {
+  const { data, error } = await supabase
+    .from("tasks")
+    .select("id, list_id, title, description, due_at, is_completed, user_id, assignee_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function getTaskListName(
+  supabase: SupabaseClient,
+  id: string
+): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("task_lists")
+    .select("name")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.name ?? null;
+}
+
 export async function getDefaultAccount(supabase: SupabaseClient) {
   const { data, error } = await supabase
     .from("accounts")
