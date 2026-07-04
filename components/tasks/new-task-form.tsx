@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createTask } from "@/app/(app)/tasks/actions";
 import { TaskFields, UNASSIGNED } from "@/components/tasks/task-fields";
@@ -59,6 +60,7 @@ export function NewTaskForm({
           disabled={isSaving || !title.trim()}
           className="w-full"
         >
+          {isSaving ? <Loader2 className="size-4 animate-spin" /> : null}
           Add Task
         </Button>
       </div>

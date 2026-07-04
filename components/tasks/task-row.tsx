@@ -4,7 +4,7 @@ import { useTransition } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Check, CalendarClock } from "lucide-react";
+import { Check, CalendarClock, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { canMutateRecord } from "@/lib/permissions";
@@ -70,7 +70,14 @@ export function TaskRow({
             : "border-muted-foreground"
         )}
       >
-        {task.is_completed ? (
+        {isPending ? (
+          <Loader2
+            className={cn(
+              "size-3 animate-spin",
+              task.is_completed ? "text-primary-foreground" : "text-muted-foreground"
+            )}
+          />
+        ) : task.is_completed ? (
           <Check className="size-3 text-primary-foreground" strokeWidth={3} />
         ) : null}
       </button>

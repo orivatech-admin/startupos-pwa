@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -76,6 +76,7 @@ export function CreateListSheet({
             onClick={handleCreate}
             disabled={isCreating || !name.trim()}
           >
+            {isCreating ? <Loader2 className="size-4 animate-spin" /> : null}
             Create list
           </Button>
         </DrawerFooter>
