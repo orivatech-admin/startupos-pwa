@@ -36,7 +36,7 @@ export default async function HomePage() {
           <p className="text-sm text-muted-foreground">Welcome back</p>
           <h1 className="text-xl font-semibold">{displayName}</h1>
         </div>
-        <UserAvatarLink name={fullName} avatarUrl={profile?.avatar_url} />
+        <UserAvatarLink name={fullName} avatarUrl={profile?.avatar_url} currentModule="ledger" />
       </div>
 
       {/* Cash flow summary always renders, even with zero activity. */}

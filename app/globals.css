@@ -49,6 +49,8 @@
   --color-income: var(--income);
   --color-chart-income: var(--chart-income);
   --color-chart-expense: var(--chart-expense);
+  --color-tasks-accent: var(--tasks-accent);
+  --color-tasks-accent-foreground: var(--tasks-accent-foreground);
 }
 
 :root {
@@ -97,8 +99,8 @@
   --card-foreground: #f2f3f5;
   --popover: #1c1f27;
   --popover-foreground: #f2f3f5;
-  --primary: #f5872e;
-  --primary-foreground: oklch(0.16 0.02 55);
+  --primary: #0b8577;
+  --primary-foreground: #f2f3f5;
   --secondary: #303339;
   --secondary-foreground: #f2f3f5;
   --muted: #303339;
@@ -108,20 +110,20 @@
   --destructive: #ff6b6b;
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 16%);
-  --ring: #f5872e;
-  --chart-1: #f5872e;
+  --ring: #0b8577;
+  --chart-1: #0b8577;
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --sidebar: #1c1f27;
   --sidebar-foreground: #f2f3f5;
-  --sidebar-primary: #f5872e;
-  --sidebar-primary-foreground: oklch(0.16 0.02 55);
+  --sidebar-primary: #0b8577;
+  --sidebar-primary-foreground: #f2f3f5;
   --sidebar-accent: #303339;
   --sidebar-accent-foreground: #f2f3f5;
   --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: #f5872e;
+  --sidebar-ring: #0b8577;
   --expense: #ff6b6b;
   --income: #4ade80;
   /* Chart bar fills, not text: darker/less-chroma than --income/--expense so
@@ -130,6 +132,13 @@
      lighter --income/--expense pair stays as-is for amount text contrast. */
   --chart-income: #11ae5b;
   --chart-expense: #d7352d;
+}
+
+/* Tasks module accent — distinct from the ledger's orange --primary, scoped
+   to the Tasks screens only via this class on their root wrapper. */
+.tasks-theme {
+  --tasks-accent: #7c8aff;
+  --tasks-accent-foreground: #ffffff;
 }
 
 @layer base {
