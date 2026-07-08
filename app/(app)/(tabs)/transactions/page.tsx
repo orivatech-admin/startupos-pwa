@@ -1,7 +1,10 @@
 import Link from "next/link";
+import { startOfDay, endOfDay } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
-import { getTransactionsForRecords } from "@/lib/queries";
+import { requireTool } from "@/lib/access";
+import { getTransactionsForRecords, getProjects } from "@/lib/queries";
 import { TransactionList } from "@/components/transaction-list/transaction-list";
+import { TransactionFilterSheet } from "@/components/transaction-list/transaction-filter-sheet";
 import { cn } from "@/lib/utils";
 
 const FILTERS = [
@@ -14,14 +17,23 @@ const FILTERS = [
 export default async function TransactionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ type?: string }>;
+  searchParams: Promise<{ type?: string; project?: string; from?: string; to?: string }>;
 }) {
-  const { type } = await searchParams;
+  const { type, project, from, to } = await searchParams;
   const activeType =
     type === "expense" || type === "income" || type === "transfer" ? type : undefined;
 
   const supabase = await createClient();
-  const transactions = await getTransactionsForRecords(supabase, activeType);
+  await requireTool(supabase, "ledger");
+  const [transactions, projects] = await Promise.all([
+    getTransactionsForRecords(supabase, {
+      type: activeType,
+      projectId: project,
+      from: from ? startOfDay(new Date(from)).toISOString() : undefined,
+      to: to ? endOfDay(new Date(to)).toISOString() : undefined,
+    }),
+    getProjects(supabase),
+  ]);
   const emptyTitle = activeType ? `No ${activeType} transactions yet` : "No transactions yet";
   const emptyDescription = activeType
     ? `Transactions you add of this type will show up here.`
@@ -29,12 +41,28 @@ export default async function TransactionsPage({
 
   return (
     <div className="flex flex-col gap-3 p-4">
-      <h1 className="text-lg font-semibold">Transactions</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-lg font-semibold">Transactions</h1>
+        <TransactionFilterSheet
+          projects={projects}
+          activeType={activeType}
+          activeProjectId={project}
+          activeFrom={from}
+          activeTo={to}
+        />
+      </div>
       <div className="flex gap-2 overflow-x-auto">
-        {FILTERS.map((filter) => (
+        {FILTERS.map((filter) => {
+          const params = new URLSearchParams();
+          if (filter.value) params.set("type", filter.value);
+          if (project) params.set("project", project);
+          if (from) params.set("from", from);
+          if (to) params.set("to", to);
+          const query = params.toString();
+          return (
           <Link
             key={filter.label}
-            href={filter.value ? `/transactions?type=${filter.value}` : "/transactions"}
+            href={query ? `/transactions?${query}` : "/transactions"}
             className={cn(
               "shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium",
               activeType === filter.value
@@ -44,7 +72,8 @@ export default async function TransactionsPage({
           >
             {filter.label}
           </Link>
-        ))}
+          );
+        })}
       </div>
       <TransactionList
         transactions={transactions}

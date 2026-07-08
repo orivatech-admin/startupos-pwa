@@ -7,6 +7,8 @@ export type TransactionStatus = "recorded" | "reconciled";
 export type AccountType = "bank_account" | "wallet" | "credit_card";
 export type PaymentModeKind = "upi" | "cheque" | "internet_banking" | "debit_card";
 export type UserRole = "admin" | "member";
+export type ToolId = "ledger" | "tasks";
+export type TaskStatus = "todo" | "in_progress" | "done";
 
 export interface Database {
   public: {
@@ -138,6 +140,7 @@ export interface Database {
           payment_mode_id: string | null;
           status: TransactionStatus;
           notes: string | null;
+          description: string | null;
         };
         Insert: Partial<Database["public"]["Tables"]["transactions"]["Row"]> & {
           transaction_type: TransactionType;
@@ -260,6 +263,27 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["allowed_emails"]["Row"]>;
         Relationships: [];
       };
+      user_tool_access: {
+        Row: {
+          user_id: string;
+          tool: ToolId;
+          granted_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["user_tool_access"]["Row"]> & {
+          user_id: string;
+          tool: ToolId;
+        };
+        Update: Partial<Database["public"]["Tables"]["user_tool_access"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "user_tool_access_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       task_lists: {
         Row: {
           id: string;
@@ -290,7 +314,8 @@ export interface Database {
           title: string;
           description: string | null;
           due_at: string | null;
-          is_completed: boolean;
+          status: TaskStatus;
+          completed_at: string | null;
           created_at: string;
         };
         Insert: Partial<Database["public"]["Tables"]["tasks"]["Row"]> & {

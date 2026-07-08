@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getAccessContext, canMutate, PERMISSION_ERROR, type AccessContext } from "@/lib/access";
 import { MY_TASKS_LIST_ID } from "@/lib/queries";
+import type { TaskStatus } from "@/lib/supabase/types";
 
 type ActionResult = { error?: string; id?: string };
 
@@ -164,9 +165,9 @@ export async function deleteTask(taskId: string): Promise<ActionResult> {
   return {};
 }
 
-export async function setTaskCompletion(
+export async function setTaskStatus(
   taskId: string,
-  isCompleted: boolean
+  status: TaskStatus
 ): Promise<ActionResult> {
   const supabase = await createClient();
   const access = await getAccessContext(supabase);
@@ -180,10 +181,7 @@ export async function setTaskCompletion(
   if (fetchError) return { error: fetchError.message };
   if (!task || !canMutateTask(access, task)) return { error: PERMISSION_ERROR };
 
-  const { error } = await supabase
-    .from("tasks")
-    .update({ is_completed: isCompleted })
-    .eq("id", taskId);
+  const { error } = await supabase.from("tasks").update({ status }).eq("id", taskId);
   if (error) return { error: error.message };
 
   revalidatePath("/tasks");

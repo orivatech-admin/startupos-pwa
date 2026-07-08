@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireTool } from "@/lib/access";
 import {
   getTransactionFormData,
   getTransactionWithTags,
@@ -15,6 +16,7 @@ export default async function EditTransactionModal({
 }) {
   const { id } = await params;
   const supabase = await createClient();
+  await requireTool(supabase, "ledger");
   const [formData, existing, profile, receipts] = await Promise.all([
     getTransactionFormData(supabase),
     getTransactionWithTags(supabase, id),
@@ -27,7 +29,7 @@ export default async function EditTransactionModal({
   console.log(`[EditTransactionModal] id=${id} receipts.length=${receipts.length}`, receipts);
 
   return (
-    <div className="fixed inset-0 z-50 mx-auto flex w-full max-w-md flex-col overflow-hidden bg-background">
+    <div className="fixed inset-0 z-50 mx-auto flex w-full max-w-md flex-col overflow-hidden bg-background pt-[env(safe-area-inset-top)]">
       <TransactionFormRoute
         mode="modal"
         categories={formData.categories}

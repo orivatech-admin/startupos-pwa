@@ -1,5 +1,6 @@
 import { BarChart3 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { requireTool } from "@/lib/access";
 import { getAnalysisData } from "@/lib/queries";
 import { Card } from "@/components/ui/card";
 import { AnalysisSummary } from "@/components/analysis/analysis-summary";
@@ -7,6 +8,7 @@ import { MonthlyBarChart } from "@/components/analysis/monthly-bar-chart";
 
 export default async function AnalysisPage() {
   const supabase = await createClient();
+  await requireTool(supabase, "ledger");
   const { monthly, byPeriod, totalBalance, hasActivity } = await getAnalysisData(supabase);
 
   return (

@@ -19,6 +19,7 @@ function parseFormData(formData: FormData) {
     destination_account_id: formData.get("destination_account_id") || undefined,
     payment_mode_id: formData.get("payment_mode_id") || undefined,
     notes: formData.get("notes") || undefined,
+    description: formData.get("description") || undefined,
     tags: JSON.parse(String(formData.get("tags") ?? "[]")),
   });
 }

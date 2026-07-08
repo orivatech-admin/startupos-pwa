@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireTool } from "@/lib/access";
 import { getCurrentProfile, getTaskById, getTaskMembers } from "@/lib/queries";
 import { TaskDetail } from "@/components/tasks/task-detail";
 
@@ -10,6 +11,7 @@ export default async function TaskDetailPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
+  await requireTool(supabase, "tasks");
   const [task, members, profile] = await Promise.all([
     getTaskById(supabase, id),
     getTaskMembers(supabase),

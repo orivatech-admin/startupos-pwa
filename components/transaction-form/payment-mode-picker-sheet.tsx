@@ -115,9 +115,10 @@ export function PaymentModePickerSheet({
           disabled={disabled}
           className="flex w-full items-center gap-3 rounded-lg py-2 text-left transition-colors hover:bg-white/5 disabled:opacity-50"
         >
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-secondary">
-            <PaymentModeIcon kind={selected?.kind ?? "upi"} className={cn("size-4", !selected && "opacity-40")} />
-          </span>
+          <PaymentModeIcon
+            kind={selected?.kind ?? "upi"}
+            className={cn("size-5 shrink-0", !selected && "opacity-40")}
+          />
           <span className="flex-1">
             <span className="block text-sm font-medium">
               {selected?.name ?? "Select payment mode"}

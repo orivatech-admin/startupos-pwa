@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Card } from "@/components/ui/card";
 import { StatTile } from "@/components/analysis/stat-tile";
-import { CategoryBarList } from "@/components/analysis/category-bar-list";
+import { CategoryDonut } from "@/components/analysis/category-donut";
 import { formatCurrency } from "@/lib/utils";
 import type { CashFlowPeriod, AnalysisPeriodStats } from "@/lib/queries";
 
@@ -77,7 +77,7 @@ export function AnalysisSummary({
         {stats.categoryBreakdown.length === 0 ? (
           <p className="text-sm text-muted-foreground">No expenses recorded yet.</p>
         ) : (
-          <CategoryBarList items={stats.categoryBreakdown} />
+          <CategoryDonut items={stats.categoryBreakdown} />
         )}
       </Card>
     </>

@@ -3,11 +3,13 @@ import { cookies } from "next/headers";
 import { format } from "date-fns";
 import { ChevronLeft, Mail, CalendarDays } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { getAccessContext } from "@/lib/access";
 import { getCurrentProfile } from "@/lib/queries";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { SignOutButton } from "@/components/sign-out-button";
 import { ActiveWorkspace, type WorkspaceId } from "@/components/active-workspace";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 function initials(name: string) {
   return name
@@ -20,8 +22,12 @@ function initials(name: string) {
 
 export default async function ProfilePage() {
   const supabase = await createClient();
-  const profile = await getCurrentProfile(supabase);
+  const [profile, access] = await Promise.all([
+    getCurrentProfile(supabase),
+    getAccessContext(supabase),
+  ]);
   const name = profile?.full_name || profile?.email || "Account";
+  const canSwitchWorkspace = (access?.tools.length ?? 0) > 1;
 
   const cookieStore = await cookies();
   const activeWorkspace: WorkspaceId =
@@ -50,7 +56,7 @@ export default async function ProfilePage() {
       </div>
 
       <div className="flex flex-col gap-3 px-4 pt-4">
-        <ActiveWorkspace active={activeWorkspace} />
+        {canSwitchWorkspace ? <ActiveWorkspace active={activeWorkspace} /> : null}
 
         <Card className="gap-0 divide-y divide-border p-0">
           <div className="flex items-center gap-3 px-4 py-3">
@@ -69,6 +75,7 @@ export default async function ProfilePage() {
               </p>
             </div>
           </div>
+          <ThemeToggle />
         </Card>
 
         <SignOutButton className="w-full" />

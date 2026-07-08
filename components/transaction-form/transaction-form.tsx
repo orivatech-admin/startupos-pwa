@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { ChevronLeft, Save, Loader2, Trash2 } from "lucide-react";
+import { ChevronLeft, Save, Loader2, Trash2, PenLine, AlignLeft } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
@@ -41,7 +41,7 @@ function FieldRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-0.5 px-4 py-1">
+    <div className="flex flex-col gap-1.5 px-4 py-1">
       <p className="text-xs text-muted-foreground">{label}</p>
       {children}
     </div>
@@ -92,6 +92,7 @@ export function TransactionForm({
   );
   const [paymentModeId, setPaymentModeId] = useState(transaction?.payment_mode_id ?? undefined);
   const [notes, setNotes] = useState(transaction?.notes ?? "");
+  const [description, setDescription] = useState(transaction?.description ?? "");
   const [tags, setTags] = useState<string[]>(initialTags);
   const [receipts, setReceipts] = useState<File[]>([]);
   const [existingReceipts, setExistingReceipts] = useState(initialReceipts);
@@ -131,6 +132,7 @@ export function TransactionForm({
       destination_account_id: destinationAccountId,
       payment_mode_id: transactionType === "transfer" ? undefined : paymentModeId,
       notes: notes || undefined,
+      description: description || undefined,
       tags,
     };
   }
@@ -158,6 +160,7 @@ export function TransactionForm({
     }
     if (parsed.data.payment_mode_id) formData.set("payment_mode_id", parsed.data.payment_mode_id);
     if (parsed.data.notes) formData.set("notes", parsed.data.notes);
+    if (parsed.data.description) formData.set("description", parsed.data.description);
     formData.set("tags", JSON.stringify(parsed.data.tags));
     receipts.forEach((file) => formData.append("receipts", file));
 
@@ -231,18 +234,22 @@ export function TransactionForm({
           <div className="border-t border-border pt-1">
             <AmountInput value={amount} onChange={setAmount} />
           </div>
-          <div className="border-t border-border pt-3">
-            <Textarea
-              placeholder="Write a note"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={1}
-              className="min-h-0 resize-none border-none bg-transparent px-3 py-2 text-lg font-medium text-foreground shadow-none placeholder:font-normal placeholder:text-muted-foreground/60 focus-visible:border-transparent focus-visible:ring-0 md:text-lg"
-            />
-          </div>
         </Card>
 
         <Card className="shrink-0 gap-0 p-0">
+          <FieldRow label="Note">
+            <div className="flex items-center gap-3">
+              <PenLine className="size-5 shrink-0 text-muted-foreground" />
+              <Textarea
+                placeholder="Add a note"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={1}
+                className="min-h-0 flex-1 resize-none border-none bg-transparent px-0 py-2 text-sm shadow-none focus-visible:border-transparent focus-visible:ring-0 dark:bg-transparent"
+              />
+            </div>
+          </FieldRow>
+
           {transactionType !== "transfer" ? (
             <FieldRow label="Category">
               <CategoryPickerSheet
@@ -298,15 +305,32 @@ export function TransactionForm({
           </FieldRow>
         </Card>
 
-        <Card className="shrink-0 gap-4 p-4">
-          <p className="text-sm font-medium text-muted-foreground">Other details</p>
-          <TagInput value={tags} onChange={setTags} suggestions={existingTags} />
-          <AttachmentUploader
-            value={receipts}
-            onChange={setReceipts}
-            existingReceipts={existingReceipts}
-            onRemoveExisting={canEditExisting ? handleRemoveExistingReceipt : undefined}
-          />
+        <Card className="shrink-0 gap-0 p-0">
+          <FieldRow label="Tags">
+            <TagInput value={tags} onChange={setTags} suggestions={existingTags} />
+          </FieldRow>
+
+          <FieldRow label="Attachments">
+            <AttachmentUploader
+              value={receipts}
+              onChange={setReceipts}
+              existingReceipts={existingReceipts}
+              onRemoveExisting={canEditExisting ? handleRemoveExistingReceipt : undefined}
+            />
+          </FieldRow>
+
+          <FieldRow label="Description">
+            <div className="flex items-start gap-3">
+              <AlignLeft className="mt-2 size-5 shrink-0 text-muted-foreground" />
+              <Textarea
+                placeholder="Add a longer description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+                className="min-h-16 flex-1 resize-none border-none bg-transparent px-0 py-2 text-sm shadow-none focus-visible:border-transparent focus-visible:ring-0 dark:bg-transparent"
+              />
+            </div>
+          </FieldRow>
         </Card>
       </div>
 

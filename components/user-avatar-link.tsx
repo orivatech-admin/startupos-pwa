@@ -27,10 +27,12 @@ export function UserAvatarLink({
   name,
   avatarUrl,
   currentModule = "ledger",
+  canSwitch = true,
 }: {
   name: string;
   avatarUrl?: string | null;
   currentModule?: keyof typeof OTHER_MODULE;
+  canSwitch?: boolean;
 }) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = React.useState(false);
@@ -75,6 +77,7 @@ export function UserAvatarLink({
   };
 
   const handlePointerDown = () => {
+    if (!canSwitch) return;
     longPressedRef.current = false;
     clearTimer();
     timerRef.current = setTimeout(() => {
@@ -95,9 +98,9 @@ export function UserAvatarLink({
     <div ref={containerRef} className="relative">
       <button
         type="button"
-        aria-label="View profile, or press and hold to switch modules"
-        aria-haspopup="menu"
-        aria-expanded={menuOpen}
+        aria-label={canSwitch ? "View profile, or press and hold to switch modules" : "View profile"}
+        aria-haspopup={canSwitch ? "menu" : undefined}
+        aria-expanded={canSwitch ? menuOpen : undefined}
         className="touch-manipulation rounded-full select-none"
         onPointerDown={handlePointerDown}
         onPointerUp={clearTimer}
