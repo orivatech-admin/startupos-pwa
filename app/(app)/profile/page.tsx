@@ -35,7 +35,7 @@ export default async function ProfilePage() {
 
   return (
     <div className="mx-auto flex min-h-svh w-full max-w-md flex-col">
-      <div className="flex items-center gap-3 border-b border-white/10 bg-card/50 px-4 py-3 backdrop-blur-xl">
+      <div className="flex items-center gap-3 border-b border-glass-border bg-glass px-4 py-3 backdrop-blur-xl dark:bg-card/50">
         <Link href="/home" aria-label="Back">
           <ChevronLeft className="size-5" />
         </Link>

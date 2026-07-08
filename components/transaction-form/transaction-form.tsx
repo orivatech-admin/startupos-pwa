@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { ChevronLeft, Save, Loader2, Trash2, PenLine, AlignLeft } from "lucide-react";
+import { ChevronLeft, Save, Loader2, Trash2, StickyNote, AlignLeft } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
@@ -198,7 +198,7 @@ export function TransactionForm({
 
   return (
     <div className="flex h-full flex-col bg-background">
-      <div className="flex items-center gap-3 border-b border-white/10 bg-card/50 px-4 py-3 backdrop-blur-xl">
+      <div className="flex items-center gap-3 border-b border-glass-border bg-glass px-4 py-3 backdrop-blur-xl dark:bg-card/50">
         <button
           type="button"
           onClick={onClose}
@@ -239,7 +239,7 @@ export function TransactionForm({
         <Card className="shrink-0 gap-0 p-0">
           <FieldRow label="Note">
             <div className="flex items-center gap-3">
-              <PenLine className="size-5 shrink-0 text-muted-foreground" />
+              <StickyNote className="size-4 shrink-0 text-muted-foreground" />
               <Textarea
                 placeholder="Add a note"
                 value={notes}
@@ -321,7 +321,7 @@ export function TransactionForm({
 
           <FieldRow label="Description">
             <div className="flex items-start gap-3">
-              <AlignLeft className="mt-2 size-5 shrink-0 text-muted-foreground" />
+              <AlignLeft className="mt-2 size-4 shrink-0 text-muted-foreground" />
               <Textarea
                 placeholder="Add a longer description"
                 value={description}

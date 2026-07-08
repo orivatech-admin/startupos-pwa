@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "OS — Ledger",
-    short_name: "OS",
+    name: "The StartUp OS",
+    short_name: "StartupOS",
     description: "Track every rupee that moves — expenses, income, and transfers.",
     start_url: "/",
     display: "standalone",

@@ -36,7 +36,7 @@ export function AttachmentUploader({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button type="button" className="flex w-full items-center gap-3 py-2 text-left">
-            <Paperclip className="size-5 shrink-0 text-muted-foreground" />
+            <Paperclip className="size-4 shrink-0 text-muted-foreground" />
             <span className="flex-1 text-sm">
               {total > 0 ? `${total} attachment${total > 1 ? "s" : ""}` : "Add attachment"}
             </span>

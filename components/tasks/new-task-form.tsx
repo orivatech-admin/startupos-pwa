@@ -55,7 +55,6 @@ export function NewTaskForm({
 
       <div className="mt-8">
         <Button
-          size="lg"
           onClick={handleSave}
           disabled={isSaving || !title.trim()}
           className="w-full"

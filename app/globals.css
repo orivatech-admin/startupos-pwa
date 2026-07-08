@@ -51,6 +51,8 @@
   --color-chart-expense: var(--chart-expense);
   --color-tasks-accent: var(--tasks-accent);
   --color-tasks-accent-foreground: var(--tasks-accent-foreground);
+  --color-glass: var(--glass);
+  --color-glass-border: var(--glass-border);
 }
 
 :root {
@@ -104,6 +106,12 @@
   --chart-cat-2: #1baf7a;
   --chart-cat-3: #eda100;
   --chart-cat-4: #008300;
+  /* Glass tiles read as flat white without a base blob to blur (no dark
+     background to contrast against), so light mode gets its own tint —
+     white glass with a hint of the brand teal — plus a visible edge, since
+     the dark mode's white/10 border disappears against a light surface. */
+  --glass: oklch(0.97 0.015 175 / 55%);
+  --glass-border: oklch(0.5 0.04 175 / 16%);
 }
 
 .dark {
@@ -158,6 +166,8 @@
   --chart-cat-2: #199e70;
   --chart-cat-3: #c98500;
   --chart-cat-4: #008300;
+  --glass: var(--card);
+  --glass-border: oklch(1 0 0 / 10%);
 }
 
 /* Tasks module accent — distinct from the ledger's orange --primary, scoped
