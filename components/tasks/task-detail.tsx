@@ -136,7 +136,6 @@ export function TaskDetail({
         {canMutate ? (
           <div className="mt-8 flex flex-col gap-2">
             <Button
-              size="lg"
               onClick={handleSave}
               disabled={isSaving || !title.trim()}
               className="w-full"

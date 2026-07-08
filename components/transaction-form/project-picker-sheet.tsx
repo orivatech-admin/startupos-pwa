@@ -74,7 +74,7 @@ export function ProjectPickerSheet({
       <DrawerTrigger asChild>
         <button className="flex w-full items-center gap-3 rounded-lg py-2 text-left transition-colors hover:bg-white/5">
           <Folder
-            className={cn("size-5 shrink-0 text-muted-foreground", !selected && "opacity-40")}
+            className={cn("size-4 shrink-0 text-muted-foreground", !selected && "opacity-40")}
           />
           <span className="flex-1 text-sm font-medium">
             {selected?.name ?? "Select project"}

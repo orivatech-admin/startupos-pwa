@@ -10,7 +10,7 @@ export function StatTile({
   tone?: "income" | "expense";
 }) {
   return (
-    <div className="rounded-lg border border-white/10 bg-white/5 p-3 backdrop-blur-md">
+    <div className="rounded-lg border border-glass-border bg-glass p-3 shadow-lg shadow-black/20 backdrop-blur-xl dark:bg-white/5">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p
         className={cn(

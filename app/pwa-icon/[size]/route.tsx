@@ -25,10 +25,26 @@ export async function GET(
   const size = Number(sizeParam) || 512;
   const maskable = request.nextUrl.searchParams.has("maskable");
   const padding = maskable ? size * 0.2 : size * 0.12;
-  const label = "OS";
-  const latoData = await loadLato(label);
+  const latoData = await loadLato("SUO");
 
   const tile = size - padding * 2;
+  const gap = tile * 0.06;
+  const cell = (tile - gap) / 2;
+
+  const cellStyle = {
+    width: cell,
+    height: cell,
+    borderRadius: cell * 0.22,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background:
+      "linear-gradient(145deg, #14b39d 0%, #0b8577 52%, #075f55 100%)",
+    color: "#f2f3f5",
+    fontSize: cell * 0.5,
+    fontWeight: 900,
+    fontFamily: "Lato",
+  } as const;
 
   return new ImageResponse(
     (
@@ -44,43 +60,20 @@ export async function GET(
       >
         <div
           style={{
-            position: "relative",
+            display: "flex",
+            flexDirection: "column",
+            gap,
             width: tile,
             height: tile,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: size * 0.24,
-            background:
-              "linear-gradient(145deg, #14b39d 0%, #0b8577 52%, #075f55 100%)",
-            border: `${Math.max(size * 0.008, 1)}px solid rgba(255,255,255,0.16)`,
-            boxShadow: `0 ${size * 0.03}px ${size * 0.08}px rgba(0,0,0,0.35)`,
           }}
         >
-          {/* Soft highlight sweep across the top for a glassy finish. */}
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: "55%",
-              borderTopLeftRadius: size * 0.24,
-              borderTopRightRadius: size * 0.24,
-              background:
-                "linear-gradient(180deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 100%)",
-            }}
-          />
-          <div
-            style={{
-              display: "flex",
-              color: "#f2f3f5",
-              fontSize: size * 0.36,
-              fontWeight: 900,
-              fontFamily: "Lato",
-            }}
-          >
-            {label}
+          <div style={{ display: "flex", gap }}>
+            <div style={cellStyle}>S</div>
+            <div style={cellStyle}>U</div>
+          </div>
+          <div style={{ display: "flex", gap }}>
+            <div style={cellStyle}>O</div>
+            <div style={cellStyle}>S</div>
           </div>
         </div>
       </div>

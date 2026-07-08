@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { LayoutGrid } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getAccessContext } from "@/lib/access";
 import { TOOL_HOME, type ToolId } from "@/lib/tools";
 import { GoogleSignInButton } from "@/components/google-sign-in-button";
+import { BrandMark } from "@/components/brand-mark";
 import { hasEnvVars } from "@/lib/utils";
 
 export default async function LandingPage() {
@@ -25,9 +25,7 @@ export default async function LandingPage() {
     <main className="flex min-h-svh flex-col items-center justify-center gap-10 p-8 text-center">
       <div className="flex flex-col items-center gap-6">
         <div className="mx-auto flex w-fit items-center gap-3">
-          <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-            <LayoutGrid className="size-8" />
-          </div>
+          <BrandMark size={64} className="shrink-0" />
           <h1 className="flex flex-col items-start text-left leading-tight">
             <span className="text-lg font-normal text-muted-foreground">The</span>
             <span className="text-3xl font-semibold">StartUp</span>

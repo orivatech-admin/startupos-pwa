@@ -48,7 +48,7 @@ export function CategoryDonut({ items }: { items: CategoryAmount[] }) {
   const active = activeIndex !== null ? arcs[activeIndex] : null;
 
   return (
-    <div className="flex items-center gap-5">
+    <div className="flex flex-col items-center gap-5">
       <div className="relative shrink-0" style={{ width: SIZE, height: SIZE }}>
         <svg
           width={SIZE}
@@ -85,7 +85,7 @@ export function CategoryDonut({ items }: { items: CategoryAmount[] }) {
           </span>
         </div>
       </div>
-      <div className="flex flex-1 flex-col gap-2">
+      <div className="flex w-full flex-col gap-2">
         {arcs.map((arc, i) => (
           <div
             key={arc.name}

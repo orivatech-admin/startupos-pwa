@@ -126,7 +126,7 @@ export function AccountPickerSheet({
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
         <button type="button" className="flex w-full items-center gap-3 py-2 text-left">
-          <AccountTypeIcon accountType={selected?.account_type ?? "bank_account"} className="size-5 shrink-0" />
+          <AccountTypeIcon accountType={selected?.account_type ?? "bank_account"} className="size-4 shrink-0" />
           <span className="flex-1 text-sm font-medium">{selected?.name ?? label}</span>
           <ChevronRight className="size-4 text-muted-foreground" />
         </button>

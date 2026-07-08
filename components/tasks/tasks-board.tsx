@@ -104,7 +104,7 @@ export function TasksBoard({
             />
           ))
         ) : (
-          <div className="mt-6 flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-card/50 px-6 py-12 text-center shadow-lg shadow-black/20 backdrop-blur-xl">
+          <div className="mt-6 flex flex-col items-center gap-3 rounded-2xl border border-glass-border bg-glass px-6 py-12 text-center shadow-lg shadow-black/20 backdrop-blur-xl dark:bg-card/50">
             <Link
               href={selectedList ? `/tasks/new?list=${selectedList.id}` : "/tasks/new"}
               aria-label="Add task"

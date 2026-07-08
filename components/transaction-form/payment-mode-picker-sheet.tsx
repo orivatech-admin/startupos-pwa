@@ -117,7 +117,7 @@ export function PaymentModePickerSheet({
         >
           <PaymentModeIcon
             kind={selected?.kind ?? "upi"}
-            className={cn("size-5 shrink-0", !selected && "opacity-40")}
+            className={cn("size-4 shrink-0", !selected && "opacity-40")}
           />
           <span className="flex-1">
             <span className="block text-sm font-medium">

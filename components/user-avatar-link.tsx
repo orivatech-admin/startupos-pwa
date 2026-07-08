@@ -120,7 +120,7 @@ export function UserAvatarLink({
       {menuOpen ? (
         <div
           role="menu"
-          className="absolute right-0 z-50 mt-1 min-w-32 rounded-lg bg-popover/90 p-1 text-popover-foreground shadow-md ring-1 ring-white/10 backdrop-blur-xl"
+          className="absolute right-0 z-50 mt-1 min-w-32 rounded-lg bg-popover/90 p-1 text-popover-foreground shadow-md ring-1 ring-glass-border backdrop-blur-xl"
         >
           <button
             type="button"

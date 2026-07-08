@@ -58,7 +58,7 @@ export function TaskRow({
   }
 
   return (
-    <div className="flex items-start gap-3.5 rounded-2xl border border-white/10 bg-card/50 px-5 py-4.5 shadow-lg shadow-black/20 backdrop-blur-xl backdrop-saturate-150">
+    <div className="flex items-start gap-3.5 rounded-2xl border border-glass-border bg-glass px-5 py-4.5 shadow-lg shadow-black/20 backdrop-blur-xl backdrop-saturate-150 dark:bg-card/50">
       <button
         type="button"
         onClick={advanceStatus}

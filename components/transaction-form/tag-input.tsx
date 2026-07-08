@@ -45,7 +45,7 @@ export function TagInput({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-3">
-        <Hash className="size-5 shrink-0 text-muted-foreground" />
+        <Hash className="size-4 shrink-0 text-muted-foreground" />
         <Input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
