@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeftRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { requireTool } from "@/lib/access";
 import { getHomeDashboardData, getCurrentProfile, getCashFlowSummary } from "@/lib/queries";
 import { Card } from "@/components/ui/card";
 import { TransactionRow } from "@/components/transaction-list/transaction-row";
@@ -18,6 +19,7 @@ const BREAKDOWN_COLORS = [
 
 export default async function HomePage() {
   const supabase = await createClient();
+  const access = await requireTool(supabase, "ledger");
   const [{ spent, categoryBreakdown, recentTransactions }, profile, cashFlow] =
     await Promise.all([
       getHomeDashboardData(supabase),
@@ -36,7 +38,12 @@ export default async function HomePage() {
           <p className="text-sm text-muted-foreground">Welcome back</p>
           <h1 className="text-xl font-semibold">{displayName}</h1>
         </div>
-        <UserAvatarLink name={fullName} avatarUrl={profile?.avatar_url} currentModule="ledger" />
+        <UserAvatarLink
+          name={fullName}
+          avatarUrl={profile?.avatar_url}
+          currentModule="ledger"
+          canSwitch={access.tools.length > 1}
+        />
       </div>
 
       {/* Cash flow summary always renders, even with zero activity. */}

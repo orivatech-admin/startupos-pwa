@@ -9,8 +9,13 @@ import {
   differenceInCalendarMonths,
 } from "date-fns";
 import type { createClient } from "@/lib/supabase/server";
+import type { TaskStatus } from "@/lib/supabase/types";
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
+
+// Tasks that have sat in "done" longer than this are hidden from list views
+// (still reachable directly by URL via getTaskById).
+const DONE_TASK_VISIBILITY_DAYS = 30;
 
 export async function getCategories(supabase: SupabaseClient) {
   const { data, error } = await supabase
@@ -495,7 +500,7 @@ export interface TaskListWithTasks {
     title: string;
     description: string | null;
     due_at: string | null;
-    is_completed: boolean;
+    status: TaskStatus;
     user_id: string;
     assignee_id: string | null;
     assigneeName: string | null;
@@ -506,6 +511,10 @@ export interface TaskListWithTasks {
 export async function getTaskListsWithTasks(
   supabase: SupabaseClient
 ): Promise<TaskListWithTasks[]> {
+  const doneCutoff = new Date(
+    Date.now() - DONE_TASK_VISIBILITY_DAYS * 24 * 60 * 60 * 1000
+  ).toISOString();
+
   const [
     { data: lists, error: listsError },
     { data: tasks, error: tasksError },
@@ -517,12 +526,18 @@ export async function getTaskListsWithTasks(
       .order("created_at"),
     supabase
       .from("tasks")
-      .select("id, list_id, title, description, due_at, is_completed, user_id, assignee_id")
+      .select("id, list_id, title, description, due_at, status, user_id, assignee_id")
+      // Hide tasks that have been done for more than DONE_TASK_VISIBILITY_DAYS.
+      .or(`status.neq.done,completed_at.gte.${doneCutoff}`)
       .order("created_at"),
     getTaskMembers(supabase),
   ]);
   if (listsError) throw listsError;
   if (tasksError) throw tasksError;
+
+  // Stable sort: done tasks sink to the bottom, todo/in_progress keep their
+  // creation order.
+  tasks.sort((a, b) => Number(a.status === "done") - Number(b.status === "done"));
 
   const nameById = new Map(members.map((m) => [m.id, m.name]));
   const avatarById = new Map(members.map((m) => [m.id, m.avatarUrl]));
@@ -555,7 +570,7 @@ export interface TaskDetailData {
   title: string;
   description: string | null;
   due_at: string | null;
-  is_completed: boolean;
+  status: TaskStatus;
   user_id: string;
   assignee_id: string | null;
 }
@@ -566,7 +581,7 @@ export async function getTaskById(
 ): Promise<TaskDetailData | null> {
   const { data, error } = await supabase
     .from("tasks")
-    .select("id, list_id, title, description, due_at, is_completed, user_id, assignee_id")
+    .select("id, list_id, title, description, due_at, status, user_id, assignee_id")
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { requireTool } from "@/lib/access";
 import { getTaskListName, getTaskMembers, MY_TASKS_LIST_ID } from "@/lib/queries";
 import { NewTaskForm } from "@/components/tasks/new-task-form";
 
@@ -13,6 +14,7 @@ export default async function NewTaskPage({
   const listId = list || MY_TASKS_LIST_ID;
 
   const supabase = await createClient();
+  await requireTool(supabase, "tasks");
   const members = await getTaskMembers(supabase);
 
   const listName =

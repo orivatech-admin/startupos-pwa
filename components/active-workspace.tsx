@@ -12,15 +12,16 @@ import {
 } from "@/components/ui/drawer";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { TOOL_HOME, type ToolId } from "@/lib/tools";
 
-export type WorkspaceId = "ledger" | "tasks";
+export type WorkspaceId = ToolId;
 
 const WORKSPACES: Record<
   WorkspaceId,
   { label: string; href: string; icon: typeof Landmark }
 > = {
-  ledger: { label: "Ledger", href: "/home", icon: Landmark },
-  tasks: { label: "Tasks", href: "/tasks", icon: ListChecks },
+  ledger: { label: "Ledger", href: TOOL_HOME.ledger, icon: Landmark },
+  tasks: { label: "Tasks", href: TOOL_HOME.tasks, icon: ListChecks },
 };
 
 const WORKSPACE_IDS = Object.keys(WORKSPACES) as WorkspaceId[];

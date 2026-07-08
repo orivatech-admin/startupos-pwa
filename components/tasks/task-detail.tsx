@@ -4,12 +4,13 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ChevronLeft, Check, UserPen, Trash2, Loader2 } from "lucide-react";
+import { ChevronLeft, Check, CircleDot, UserPen, Trash2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { canMutateRecord } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
-import { updateTask, deleteTask, setTaskCompletion } from "@/app/(app)/tasks/actions";
+import { updateTask, deleteTask, setTaskStatus } from "@/app/(app)/tasks/actions";
+import { nextTaskStatus, TASK_STATUS_LABEL } from "@/lib/task-status";
 import { TaskFields, UNASSIGNED } from "@/components/tasks/task-fields";
 import type { TaskDetailData, TaskMember } from "@/lib/queries";
 import type { UserRole } from "@/lib/supabase/types";
@@ -32,7 +33,7 @@ export function TaskDetail({
   const [description, setDescription] = useState(task.description ?? "");
   const [dueAt, setDueAt] = useState<string | null>(task.due_at);
   const [assigneeId, setAssigneeId] = useState(task.assignee_id ?? UNASSIGNED);
-  const [isCompleted, setIsCompleted] = useState(task.is_completed);
+  const [status, setStatus] = useState(task.status);
   const [isSaving, startSaving] = useTransition();
   const [isToggling, startToggle] = useTransition();
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -41,14 +42,15 @@ export function TaskDetail({
     canMutateRecord(currentUserRole, currentUserId, task.user_id) ||
     canMutateRecord(currentUserRole, currentUserId, task.assignee_id);
 
-  function toggle() {
+  function advanceStatus() {
+    const next = nextTaskStatus(status);
     startToggle(async () => {
-      const result = await setTaskCompletion(task.id, !isCompleted);
+      const result = await setTaskStatus(task.id, next);
       if (result.error) {
         toast.error(result.error);
         return;
       }
-      setIsCompleted((prev) => !prev);
+      setStatus(next);
     });
   }
 
@@ -87,21 +89,26 @@ export function TaskDetail({
 
         <button
           type="button"
-          onClick={toggle}
+          onClick={advanceStatus}
           disabled={isToggling || !canMutate}
+          aria-label={`${TASK_STATUS_LABEL[status]} — tap to mark as ${TASK_STATUS_LABEL[nextTaskStatus(status)]}`}
           className={cn(
             "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-60",
-            isCompleted
+            status === "done"
               ? "bg-primary text-primary-foreground"
-              : "border border-border bg-secondary text-secondary-foreground"
+              : status === "in_progress"
+                ? "bg-amber-500/15 text-amber-500"
+                : "border border-border bg-secondary text-secondary-foreground"
           )}
         >
           {isToggling ? (
             <Loader2 className="size-3.5 animate-spin" />
+          ) : status === "in_progress" ? (
+            <CircleDot className="size-3.5" />
           ) : (
-            <Check className="size-3.5" strokeWidth={isCompleted ? 3 : 2} />
+            <Check className="size-3.5" strokeWidth={status === "done" ? 3 : 2} />
           )}
-          {isCompleted ? "Done" : "Mark as done"}
+          {TASK_STATUS_LABEL[status]}
         </button>
       </div>
 

@@ -1,5 +1,6 @@
 import { Landmark } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { requireTool } from "@/lib/access";
 import { getAccountsWithPaymentModes, getDefaultAccount, getCurrentProfile } from "@/lib/queries";
 import { AccountCard } from "@/components/accounts/account-card";
 import { AddAccountDialog } from "@/components/accounts/add-account-dialog";
@@ -8,6 +9,7 @@ import { Card } from "@/components/ui/card";
 
 export default async function AccountsPage() {
   const supabase = await createClient();
+  await requireTool(supabase, "ledger");
   const [accounts, defaultAccount, profile] = await Promise.all([
     getAccountsWithPaymentModes(supabase),
     getDefaultAccount(supabase),

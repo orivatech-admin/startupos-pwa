@@ -1,10 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
+import { requireTool } from "@/lib/access";
 import { getCurrentProfile, getTaskListsWithTasks } from "@/lib/queries";
 import { UserAvatarLink } from "@/components/user-avatar-link";
 import { TasksBoard } from "@/components/tasks/tasks-board";
 
 export default async function TasksPage() {
   const supabase = await createClient();
+  const access = await requireTool(supabase, "tasks");
   const [profile, lists] = await Promise.all([
     getCurrentProfile(supabase),
     getTaskListsWithTasks(supabase),
@@ -24,6 +26,7 @@ export default async function TasksPage() {
           name={fullName}
           avatarUrl={profile?.avatar_url}
           currentModule="tasks"
+          canSwitch={access.tools.length > 1}
         />
       </div>
 

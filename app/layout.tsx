@@ -19,7 +19,7 @@ const lato = Lato({
 });
 
 export const metadata: Metadata = {
-  title: "OS — Ledger",
+  title: "The StartUp OS",
   description: "Track every rupee that moves — expenses, income, and transfers.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {

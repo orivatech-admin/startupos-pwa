@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { startOfDay, endOfDay } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
+import { requireTool } from "@/lib/access";
 import { getTransactionsForRecords, getProjects } from "@/lib/queries";
 import { TransactionList } from "@/components/transaction-list/transaction-list";
 import { TransactionFilterSheet } from "@/components/transaction-list/transaction-filter-sheet";
@@ -23,6 +24,7 @@ export default async function TransactionsPage({
     type === "expense" || type === "income" || type === "transfer" ? type : undefined;
 
   const supabase = await createClient();
+  await requireTool(supabase, "ledger");
   const [transactions, projects] = await Promise.all([
     getTransactionsForRecords(supabase, {
       type: activeType,

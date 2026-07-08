@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireTool } from "@/lib/access";
 import {
   getTransactionFormData,
   getTransactionWithTags,
@@ -15,6 +16,7 @@ export default async function EditTransactionPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
+  await requireTool(supabase, "ledger");
   const [formData, existing, profile, receipts] = await Promise.all([
     getTransactionFormData(supabase),
     getTransactionWithTags(supabase, id),
