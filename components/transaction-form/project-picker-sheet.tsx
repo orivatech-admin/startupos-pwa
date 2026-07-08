@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ChevronRight, FolderKanban, Plus } from "lucide-react";
+import { Folder, ChevronRight, Plus } from "lucide-react";
 import { toast } from "sonner";
 import {
   Drawer,
@@ -73,9 +73,9 @@ export function ProjectPickerSheet({
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
         <button className="flex w-full items-center gap-3 rounded-lg py-2 text-left transition-colors hover:bg-white/5">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-secondary">
-            <FolderKanban className={cn("size-4", !selected && "opacity-40")} />
-          </span>
+          <Folder
+            className={cn("size-5 shrink-0 text-muted-foreground", !selected && "opacity-40")}
+          />
           <span className="flex-1 text-sm font-medium">
             {selected?.name ?? "Select project"}
           </span>
@@ -104,7 +104,7 @@ export function ProjectPickerSheet({
             >
               <RadioDot selected={project.id === value} />
               <span className="flex size-8 items-center justify-center rounded-lg bg-secondary">
-                <FolderKanban className="size-4" />
+                <Folder className="size-4" />
               </span>
               <span className="text-sm">{project.name}</span>
             </button>

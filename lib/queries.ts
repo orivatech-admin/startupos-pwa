@@ -238,7 +238,12 @@ export async function getRecentTransactions(supabase: SupabaseClient, limit: num
 
 export async function getTransactionsForRecords(
   supabase: SupabaseClient,
-  type?: "expense" | "income" | "transfer"
+  filters?: {
+    type?: "expense" | "income" | "transfer";
+    projectId?: string;
+    from?: string;
+    to?: string;
+  }
 ) {
   let query = supabase
     .from("transactions")
@@ -246,7 +251,10 @@ export async function getTransactionsForRecords(
       "id, transaction_type, amount, currency, date_time, status, notes, category_id, project_id, account_id, destination_account_id"
     )
     .order("date_time", { ascending: false });
-  if (type) query = query.eq("transaction_type", type);
+  if (filters?.type) query = query.eq("transaction_type", filters.type);
+  if (filters?.projectId) query = query.eq("project_id", filters.projectId);
+  if (filters?.from) query = query.gte("date_time", filters.from);
+  if (filters?.to) query = query.lte("date_time", filters.to);
 
   const { data, error } = await query;
   if (error) throw error;
@@ -262,7 +270,7 @@ export async function getHomeDashboardData(supabase: SupabaseClient) {
       .from("transactions")
       .select("transaction_type, amount, category_id, date_time")
       .gte("date_time", monthStart),
-    getRecentTransactions(supabase, 8),
+    getRecentTransactions(supabase, 5),
     getCategories(supabase),
   ]);
   if (error) throw error;

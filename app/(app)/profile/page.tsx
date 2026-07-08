@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { SignOutButton } from "@/components/sign-out-button";
 import { ActiveWorkspace, type WorkspaceId } from "@/components/active-workspace";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 function initials(name: string) {
   return name
@@ -69,6 +70,7 @@ export default async function ProfilePage() {
               </p>
             </div>
           </div>
+          <ThemeToggle />
         </Card>
 
         <SignOutButton className="w-full" />

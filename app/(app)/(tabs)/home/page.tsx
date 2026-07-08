@@ -62,6 +62,20 @@ export default async function HomePage() {
         </Card>
       ) : (
         <>
+          <div>
+            <div className="flex items-center justify-between px-1 pb-1">
+              <p className="text-sm font-medium">Recent activity</p>
+              <Link href="/transactions" className="text-xs text-primary">
+                See all
+              </Link>
+            </div>
+            <Card className="gap-0 divide-y divide-border p-0">
+              {recentTransactions.map((t) => (
+                <TransactionRow key={t.id} transaction={t} />
+              ))}
+            </Card>
+          </div>
+
           <Card className="gap-3 p-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium">Where it went</p>
@@ -94,20 +108,6 @@ export default async function HomePage() {
               </div>
             )}
           </Card>
-
-          <div>
-            <div className="flex items-center justify-between px-1 pb-1">
-              <p className="text-sm font-medium">Recent activity</p>
-              <Link href="/transactions" className="text-xs text-primary">
-                See all
-              </Link>
-            </div>
-            <Card className="gap-0 divide-y divide-border p-0">
-              {recentTransactions.map((t) => (
-                <TransactionRow key={t.id} transaction={t} />
-              ))}
-            </Card>
-          </div>
         </>
       )}
     </div>

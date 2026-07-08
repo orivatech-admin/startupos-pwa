@@ -1,7 +1,13 @@
 "use client";
 
 import { useRef } from "react";
-import { Paperclip, ChevronRight, X, FileText } from "lucide-react";
+import { Paperclip, ChevronRight, Camera, X, FileText } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import type { ReceiptWithUrl } from "@/lib/queries";
 
 export function AttachmentUploader({
@@ -15,7 +21,8 @@ export function AttachmentUploader({
   existingReceipts?: ReceiptWithUrl[];
   onRemoveExisting?: (receiptId: string) => void;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const total = existingReceipts.length + value.length;
 
   function handleSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -26,19 +33,37 @@ export function AttachmentUploader({
 
   return (
     <div className="flex flex-col gap-3">
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        className="flex w-full items-center gap-3 text-left"
-      >
-        <Paperclip className="size-4 shrink-0 text-muted-foreground" />
-        <span className="flex-1 text-sm">
-          {total > 0 ? `${total} attachment${total > 1 ? "s" : ""}` : "Add attachment"}
-        </span>
-        <ChevronRight className="size-4 text-muted-foreground" />
-      </button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button type="button" className="flex w-full items-center gap-3 py-2 text-left">
+            <Paperclip className="size-5 shrink-0 text-muted-foreground" />
+            <span className="flex-1 text-sm">
+              {total > 0 ? `${total} attachment${total > 1 ? "s" : ""}` : "Add attachment"}
+            </span>
+            <ChevronRight className="size-4 text-muted-foreground" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-48">
+          <DropdownMenuItem onSelect={() => cameraInputRef.current?.click()}>
+            <Camera className="size-4" />
+            Take photo
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => fileInputRef.current?.click()}>
+            <Paperclip className="size-4" />
+            Choose file
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       <input
-        ref={inputRef}
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleSelect}
+      />
+      <input
+        ref={fileInputRef}
         type="file"
         accept="image/*,application/pdf"
         multiple
@@ -46,7 +71,7 @@ export function AttachmentUploader({
         onChange={handleSelect}
       />
       {total > 0 ? (
-        <div className="flex flex-col gap-2 pl-7">
+        <div className="flex flex-col gap-2 pl-8">
           {existingReceipts.map((receipt) => (
             <div
               key={receipt.id}

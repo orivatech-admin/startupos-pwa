@@ -45,17 +45,17 @@ export function TagInput({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-3">
-        <Hash className="size-4 shrink-0 text-muted-foreground" />
+        <Hash className="size-5 shrink-0 text-muted-foreground" />
         <Input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Add tags"
-          className="h-auto flex-1 border-none bg-transparent px-3 py-2 shadow-none focus-visible:border-transparent focus-visible:ring-0"
+          className="h-auto flex-1 border-none bg-transparent px-0 py-2 text-sm shadow-none focus-visible:border-transparent focus-visible:ring-0 dark:bg-transparent"
         />
       </div>
       {chips.length > 0 ? (
-        <div className="flex flex-wrap gap-2 pl-10">
+        <div className="flex flex-wrap gap-2 pl-8">
           {chips.map((tag) => {
             const active = value.includes(tag);
             return (

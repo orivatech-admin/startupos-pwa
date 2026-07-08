@@ -138,6 +138,7 @@ export interface Database {
           payment_mode_id: string | null;
           status: TransactionStatus;
           notes: string | null;
+          description: string | null;
         };
         Insert: Partial<Database["public"]["Tables"]["transactions"]["Row"]> & {
           transaction_type: TransactionType;

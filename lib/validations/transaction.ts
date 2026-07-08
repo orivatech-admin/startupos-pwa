@@ -12,6 +12,7 @@ export const TransactionFormSchema = z
     destination_account_id: z.uuid().optional(),
     payment_mode_id: z.uuid().optional(),
     notes: z.string().max(2000).optional(),
+    description: z.string().max(2000).optional(),
     tags: z.array(z.string().trim().min(1).max(40)).default([]),
   })
   .check((ctx) => {

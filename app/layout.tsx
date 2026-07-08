@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Lato } from "next/font/google";
+import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { RegisterServiceWorker } from "@/components/register-service-worker";
 import { PointerEventsGuard } from "@/components/pointer-events-guard";
@@ -44,14 +45,22 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`dark ${lato.variable} h-full antialiased`}
+      className={`${lato.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        <BackgroundGlow />
-        {children}
-        <Toaster richColors position="top-center" />
-        <RegisterServiceWorker />
-        <PointerEventsGuard />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
+          <BackgroundGlow />
+          {children}
+          <Toaster richColors position="top-center" />
+          <RegisterServiceWorker />
+          <PointerEventsGuard />
+        </ThemeProvider>
       </body>
     </html>
   );
